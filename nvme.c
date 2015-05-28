@@ -80,6 +80,7 @@ static const char *devicename;
 	ENTRY(READ_CMD, "read", "Submit a read command, return results", read_cmd) \
 	ENTRY(WRITE_CMD, "write", "Submit a write command, return results", write_cmd) \
 	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
+	ENTRY(SUBSYS_RESET, "subsys-reset", "Sends a subsystem reset to the controller. Requires admin character device", subsys_reset) \
 	ENTRY(HELP, "help", "Display this help", help)
 
 #define ENTRY(i, n, h, f) \
@@ -1357,6 +1358,19 @@ static int list(int argc, char **argv)
   return 0;
 }
 #endif
+
+static int subsys_reset(int argc, char **argv)
+{
+	int err;
+
+	get_dev(1, argc, argv);
+
+	err = ioctl(fd, NVME_IOCTL_NSSR);
+	if (err > 0)
+		fprintf(stderr, "NVMe Status: %s\n", nvme_status_to_string(err));
+
+	return err;
+}
 
 static int id_ctrl(int argc, char **argv)
 {
