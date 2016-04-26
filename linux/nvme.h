@@ -505,6 +505,11 @@ struct nvme_bar {
 	__u32			cmbsz;	/* Controller Memory Buffer Size */
 };
 
+struct nvme_opal_key {
+	__u8	locking_range;
+	__u8	key[256];
+};
+
 #define nvme_admin_cmd nvme_passthru_cmd
 
 #define NVME_VS(major, minor) (((major) << 16) | ((minor) << 8))
@@ -515,6 +520,8 @@ struct nvme_bar {
 #define NVME_IOCTL_IO_CMD	_IOWR('N', 0x43, struct nvme_passthru_cmd)
 #define NVME_IOCTL_RESET	_IO('N', 0x44)
 #define NVME_IOCTL_SUBSYS_RESET	_IO('N', 0x45)
+#define NVME_IOCTL_SAVE_OPAL_KEY _IOW('N', 0X46, struct nvme_opal_key)
+#define NVME_IOCTL_UNLOCK_OPAL  _IO('N', 0X47)
 
 
 #endif /* _UAPI_LINUX_NVME_H */

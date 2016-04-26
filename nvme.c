@@ -101,6 +101,8 @@ static const char nvme_version_string[] = NVME_VERSION;
 	ENTRY(WRITE_UNCOR_CMD, "write-uncor", "Submit a write uncorrectable command, return results", write_uncor) \
 	ENTRY(RESET, "reset", "Resets the controller", reset) \
 	ENTRY(SUBSYS_RESET, "subsystem-reset", "Resets the controller", subsystem_reset) \
+	ENTRY(OPAL_UNLOCK, "opal-unlock", "Performs an OPAL unlock on the namespace", opal_unlock) \
+	ENTRY(OPAL_SAVE_KEY, "opal-save-key", "Performs an OPAL save key on the namespace", opal_save_key) \
 	ENTRY(REGISTERS, "show-regs", "Shows the controller registers. Requires admin character device", show_registers) \
 	ENTRY(VERSION, "version", "Shows the program version", version) \
 	ENTRY(HELP, "help", "Display this help", help)
@@ -1230,6 +1232,51 @@ static int reset(int argc, char **argv)
 {
 	clear_args(argc, argv);
 	return nvme_reset_controller(fd);
+}
+
+static int opal_unlock(int argc, char **argv)
+{
+	clear_args(argc, argv);
+	return nvme_opal_unlock(fd);
+}
+
+static int opal_save_key(int argc, char **argv)
+{
+	const char *desc = "Sets an OPAL key onto a locking range";
+	const char *locking_range = "locking range (required)";
+	const char *key = "opal key (required)";
+	struct nvme_opal_key opal_key;
+
+	struct config {
+		__u8 locking_range;
+		char *key;
+	};
+
+	struct config cfg = {
+		.locking_range = 0,
+		.key = NULL,
+	};
+
+	const struct argconfig_commandline_options command_line_options[] = {
+		{"locking_range", 'l', "NUM", CFG_POSITIVE, &cfg.locking_range, required_argument, locking_range},
+		{"key", 'k', "STRING", CFG_STRING, &cfg.key, required_argument, key},
+		{0}
+	};
+
+	parse_and_open(argc, argv, desc, command_line_options, &cfg, sizeof(cfg));
+
+	if (strlen(cfg.key) > sizeof(opal_key.key)) {
+		perror("opal-save-key: Key too long.");
+		return errno;
+	}
+
+	memset(&opal_key, 0, sizeof(opal_key));
+	opal_key.locking_range = cfg.locking_range;
+	strncpy((char *)opal_key.key, cfg.key, sizeof(opal_key.key));
+
+	printf("Attempting to set Locking Range %u with Key %s\n",
+		opal_key.locking_range, opal_key.key);
+	return nvme_opal_save_key(fd, &opal_key);
 }
 
 static void print_lo_hi_64(uint32_t *val)

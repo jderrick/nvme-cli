@@ -114,5 +114,7 @@ int nvme_sec_recv(int fd, __u32 nsid, __u8 nssf, __u16 spsp,
 
 int nvme_subsystem_reset(int fd);
 int nvme_reset_controller(int fd);
+int nvme_opal_unlock(int fd);
+int nvme_opal_save_key(int fd, struct nvme_opal_key *opal_key);
 
 #endif				/* _NVME_LIB_H */

@@ -65,6 +65,38 @@ int nvme_get_nsid(int fd)
 	return ioctl(fd, NVME_IOCTL_ID);
 }
 
+int nvme_opal_unlock(int fd)
+{
+	static struct stat nvme_stat;
+	int err = fstat(fd, &nvme_stat);
+
+	if (err < 0)
+		return err;
+
+	if (!S_ISBLK(nvme_stat.st_mode)) {
+		fprintf(stderr,
+			"Error: requesting opal-unlock from non-block device\n");
+		exit(ENOTBLK);
+	}
+	return ioctl(fd, NVME_IOCTL_UNLOCK_OPAL);
+}
+
+int nvme_opal_save_key(int fd, struct nvme_opal_key *opal_key)
+{
+	static struct stat nvme_stat;
+	int err = fstat(fd, &nvme_stat);
+
+	if (err < 0)
+		return err;
+
+	if (!S_ISBLK(nvme_stat.st_mode)) {
+		fprintf(stderr,
+			"Error: requesting opal-save-key from non-block device\n");
+		exit(ENOTBLK);
+	}
+	return ioctl(fd, NVME_IOCTL_SAVE_OPAL_KEY, opal_key);
+}
+
 int nvme_submit_passthru(int fd, int ioctl_cmd, struct nvme_passthru_cmd *cmd)
 {
 	return ioctl(fd, ioctl_cmd, cmd);
